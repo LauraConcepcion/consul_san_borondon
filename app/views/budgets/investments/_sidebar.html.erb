@@ -2,26 +2,36 @@
 
 <% if can?(:create, Budget::Investment.new(budget: @budget)) %>
   <% if current_user && current_user.level_two_or_three_verified? %>
-    <%= link_to t("budgets.investments.index.sidebar.create"), new_budget_investment_path, class: "button budget expanded" %>
+    <%= link_to t("budgets.investments.index.sidebar.create"),
+               new_budget_investment_path(budget_id: @budget.id), class: "button budget expanded" %>
   <% else %>
     <div class="callout warning">
       <%= t("budgets.investments.index.sidebar.verified_only",
-          verify: link_to(t("budgets.investments.index.sidebar.verify_account"), verification_path)).html_safe %>
+          verify: link_to(t("budgets.investments.index.sidebar.verify_account"),
+                  verification_path)).html_safe %>
     </div>
   <% end %>
 <% end %>
 
-<% if @budget.accepting? %>
-  <%= render "shared/tag_cloud", taggable: 'budget/investment' %>
-  <%= render 'categories' %>
+<% if @heading && can?(:show, @ballot) %>
+  <p class="callout">
+    <%= t("budgets.investments.index.sidebar.voted_info",
+        link: link_to(t("budgets.investments.index.sidebar.voted_info_link"),
+            budget_ballot_path(@budget))).html_safe %>
+  </p>
 <% end %>
 
+<%= render "shared/tag_cloud", taggable: 'budget/investment' %>
+<%= render 'budgets/investments/categories' %>
 
 <% if @heading && can?(:show, @ballot) %>
 
   <div class="sidebar-divider"></div>
 
-  <h2 class="sidebar-title"><%= t("budgets.investments.index.sidebar.my_ballot") %></h2>
+  <h2 class="sidebar-title">
+    <%= t("budgets.investments.index.sidebar.my_ballot") %>
+  </h2>
+
   <% if @ballot.investments.by_heading(@heading.id).count > 0 %>
     <p>
       <em>
@@ -29,6 +39,18 @@
             count: @ballot.investments.by_heading(@heading.id).count,
             amount_spent: @ballot.formatted_amount_spent(@heading)) %>
       </em>
+    </p>
+  <% elsif @assigned_heading.present? %>
+    <p>
+      <%= t("budgets.investments.index.sidebar.different_heading_assigned_html",
+              heading_link: heading_link(@assigned_heading, @budget)
+            ) %>
+      <br>
+      <small>
+        <%= t("budgets.investments.index.sidebar.change_ballot",
+            check_ballot: link_to(t("budgets.investments.index.sidebar.check_ballot_link"),
+                          budget_ballot_path(@budget))).html_safe %>
+      </small>
     </p>
   <% else %>
     <p><strong><%= t("budgets.investments.index.sidebar.zero") %></strong></p>
@@ -43,6 +65,4 @@
       <% end %>
     <% end %>
   </ul>
-
-  <p class="callout primary"><%= t("budgets.investments.index.sidebar.voted_info") %></p>
 <% end %>
